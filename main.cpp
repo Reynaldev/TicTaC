@@ -9,7 +9,7 @@ char grid[] = {
     ' ', ' ', ' '
 };
 
-int patterns[] = {
+int winPatterns[] = {
     // Horizontal
     0, 1, 2,
     3, 4, 5,
@@ -34,6 +34,8 @@ struct {
         this->sym = (choice % 2 == 0) ? 'X' : 'O';
     }
 } player, cpu;
+
+enum TurnState { PLAYER, CPU };
 
 int main()
 {
@@ -62,6 +64,8 @@ int main()
         char playerName[] = "";
         int randPick = rand();
 
+        TurnState turnState = (randPick % 2 == 0) ? TurnState::PLAYER : TurnState::CPU;
+
         printf("\033[2J");
         printf("Insert your name\n>> ");
         scanf("%s", playerName);
@@ -76,7 +80,16 @@ int main()
             player.name,
             player.sym
         );
-        
+
+        switch (turnState)
+        {
+        case TurnState::PLAYER:
+            printf("\n\nPlayer go first\n\n");
+            break;
+        case TurnState::CPU:
+            printf("\n\nCPU go first\n\n");
+            break;
+        }
         
         while (true) {
             static clock_t time;
@@ -118,10 +131,40 @@ int main()
 
             printf("Empty column(s): %s\n\n", strEmptyCol);
 
-            printf("Your turn\n>> ");
-            scanf("%d", &input);
+            switch (turnState)
+            {
+            case TurnState::PLAYER:
+                printf("Your turn\n>> ");
+                scanf("%d", &input);
 
-            
+                if (input > gridLength || input < 1) {
+                    printf("Invalid input!\n");
+                    continue;
+                }
+
+                grid[input - 1] = player.sym;
+                turnState = TurnState::CPU;
+                break;
+            case TurnState::CPU:
+                printf("\n\nCPU's turn");
+                
+                while (true) {
+                    static clock_t time;
+                    time = clock();
+
+                    if (time % 3000 == 0) 
+                        break;
+                }
+
+
+                int symPlace = rand() % gridLength;
+                grid[symPlace] = cpu.sym;
+                
+                turnState = TurnState::PLAYER;
+                break;
+            }
+
+            memset(strEmptyCol, 0, sizeof(strEmptyCol));
         }
     }
     else
