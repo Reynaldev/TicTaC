@@ -3,6 +3,8 @@
 #include <cstring>
 #include <ctime>
 
+#define CLR_SCR "\033[2J"
+
 char grid[] = {
     ' ', ' ', ' ',
     ' ', ' ', ' ',
@@ -37,13 +39,44 @@ struct {
 
 enum TurnState { PLAYER, CPU };
 
+void wait(int ms)
+{
+    while (true) {
+        static clock_t t = clock();
+        int d = (clock() - t);
+
+        if (d != 0 && d % ms == 0) 
+            break;
+
+        // printf("\n%d", d % 3);
+    }
+}
+
+bool winCheck(char c)
+{
+    for (int i = 0; i < (sizeof(winPatterns) / sizeof(int)); i += 3)
+    {
+        // printf("%d %d %d\n", winPatterns[i], winPatterns[i + 1], winPatterns[i + 2]);
+        // printf("|%c|%c|%c|\n", grid[winPatterns[i]], grid[winPatterns[i + 1]], grid[winPatterns[i + 2]]);
+
+        if ((grid[winPatterns[i]] == c) 
+            && (grid[winPatterns[i + 1]] == c) 
+            && (grid[winPatterns[i + 2]] == c)) 
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 int main()
 {
     int gridLength = (sizeof(grid) / sizeof(char));
 
     unsigned int input;
 
-    printf("\033[2J");
+    puts(CLR_SCR);
     printf("Welcome to TicTac++\n");
     printf("1) Play\n");
     printf("0) Exit\n");
@@ -66,14 +99,14 @@ int main()
 
         TurnState turnState = (randPick % 2 == 0) ? TurnState::PLAYER : TurnState::CPU;
 
-        printf("\033[2J");
+        puts(CLR_SCR);
         printf("Insert your name\n>> ");
         scanf("%s", playerName);
 
         player.init(playerName, randPick);
         cpu.init("CPU", randPick + 1);
 
-        printf("\033[2J");
+        puts(CLR_SCR);
         printf(
             "Hello %s\n"
             "Your symbol is '%c'\n",
@@ -84,29 +117,21 @@ int main()
         switch (turnState)
         {
         case TurnState::PLAYER:
-            printf("\n\nPlayer go first\n\n");
+            printf("\n\nPlayer go first");
             break;
         case TurnState::CPU:
-            printf("\n\nCPU go first\n\n");
+            printf("\n\nCPU go first");
             break;
         }
         
-        while (true) {
-            static clock_t time;
-            time = clock();
-
-            if (time % 3000 == 0) 
-                break;
-        }
-        
+        wait(3000);
 
         // Gameplay loop
-        bool quit = false;
-        while (!quit)
+        while (true)
         {
-            char *strEmptyCol;
+            char strEmptyCol[8];
 
-            printf("\033[2J");
+            printf("%s\n", CLR_SCR);
             for (int i = 1; i <= gridLength; i++)
             {
                 printf("|%c", grid[i - 1]);
@@ -129,37 +154,97 @@ int main()
                 }
             }
 
-            printf("Empty column(s): %s\n\n", strEmptyCol);
-
             switch (turnState)
             {
             case TurnState::PLAYER:
+                printf("Empty column(s): %s\n\n", strEmptyCol);
                 printf("Your turn\n>> ");
                 scanf("%d", &input);
-
-                if (input > gridLength || input < 1) {
-                    printf("Invalid input!\n");
-                    continue;
+                
+                if (input > gridLength || input < 1)
+                {
+                    puts("\nInvalid input!\n");
+                    wait(3000);
+                }
+                
+                if (grid[input - 1] != ' ') 
+                {
+                    puts("\nThat place is not empty!\n");
+                    wait(3000);
                 }
 
                 grid[input - 1] = player.sym;
+
+                if (winCheck(player.sym))
+                {
+                    putchar('\n');
+
+                    for (int i = 1; i <= gridLength; i++)
+                    {
+                        printf("|%c", grid[i - 1]);
+
+                        if (i % 3 == 0)
+                        {
+                            printf("|\n");
+
+                            for (int j = 0; j < 7; j++) 
+                            {
+                                putchar('-');
+                            }
+
+                            printf("\n");
+                        }
+                    }
+                    
+                    printf("\nYou won the game!\nCongrats, %s!", player.name);
+                    return 0;
+                }
+
+                // winCheck(player.sym);
+                // scanf("\n");
+
                 turnState = TurnState::CPU;
                 break;
             case TurnState::CPU:
                 printf("\n\nCPU's turn");
                 
-                while (true) {
-                    static clock_t time;
-                    time = clock();
-
-                    if (time % 3000 == 0) 
-                        break;
-                }
-
+                wait(3000);
 
                 int symPlace = rand() % gridLength;
-                grid[symPlace] = cpu.sym;
+                while (grid[symPlace] != ' ') 
+                {
+                    symPlace = (symPlace + 1) % gridLength;
+
+                    printf("\n%d", symPlace);
+                }
                 
+                grid[symPlace] = cpu.sym;
+
+                if (winCheck(cpu.sym))
+                {
+                    putchar('\n');
+
+                    for (int i = 1; i <= gridLength; i++)
+                    {
+                        printf("|%c", grid[i - 1]);
+                        
+                        if (i % 3 == 0)
+                        {
+                            printf("|\n");
+
+                            for (int j = 0; j < 7; j++) 
+                            {
+                                putchar('-');
+                            }
+
+                            printf("\n");
+                        }
+                    }
+
+                    printf("\nCPU won the game!\nToo bad, %s.", player.name);
+                    return 0;
+                }
+
                 turnState = TurnState::PLAYER;
                 break;
             }
