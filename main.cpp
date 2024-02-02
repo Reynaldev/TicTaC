@@ -2,6 +2,7 @@
 #include <string>
 #include <cstring>
 #include <ctime>
+#include <cmath>
 
 #define CLR_SCR "\033[2J"
 
@@ -52,17 +53,33 @@ void wait(int ms)
     }
 }
 
-bool isWinning(char c)
+bool isWinning(char c, int i)
 {
-    for (int i = 0; i < (sizeof(winPatterns) / sizeof(int)); i += 3)
-    {
-        if ((grid[winPatterns[i]] == c) 
-            && (grid[winPatterns[i + 1]] == c) 
-            && (grid[winPatterns[i + 2]] == c)) 
-        {
+    // Diagonal right
+    if (grid[0] == c 
+        && grid[4] == c 
+        && grid[8] == c)
             return true;
-        }
-    }
+
+    // Diagonal left
+    if (grid[2] == c
+        && grid[4] == c
+        && grid[6] == c)
+            return true;
+
+    // Vertical
+    if (grid[i] == c 
+        && grid[(i + 3) % 9] == c 
+        && grid[(i + 6) % 9] == c)
+            return true;
+
+    // Horizontal
+    // Get first index of the row
+    int row = floor(i / 3) * 3;
+    if (grid[row] == c 
+        && grid[row + 1] == c
+        && grid[row + 2] == c)
+            return true;
 
     return false;
 }
@@ -127,6 +144,7 @@ int main()
         while (true)
         {
             static char nextSym = ' ';
+            static int nextSymIndex = -1;
             char strEmptyCol[8];
 
             printf("%s\n", CLR_SCR);
@@ -148,15 +166,15 @@ int main()
                 }
             }
 
-            if (nextSym != ' ')
+            if (nextSym != ' ' && nextSymIndex != -1)
             {
-                if (nextSym == player.sym && isWinning(player.sym))
+                if (nextSym == player.sym && isWinning(player.sym, nextSymIndex))
                 {
                     printf("\nYou won the game!\nCongrats, %s!", player.name);
                     return 0;
                 }
                 
-                if (nextSym == cpu.sym && isWinning(cpu.sym))
+                if (nextSym == cpu.sym && isWinning(cpu.sym, nextSymIndex))
                 {
                     printf("\nCPU won the game!\nToo bad, %s.", player.name);
                     return 0;
@@ -186,6 +204,7 @@ int main()
 
                 grid[input - 1] = player.sym;
                 nextSym = player.sym;
+                nextSymIndex = input - 1;
 
                 turnState = TurnState::CPU;
                 break;
@@ -216,6 +235,7 @@ int main()
 
                 grid[symPlace] = cpu.sym;
                 nextSym = cpu.sym;
+                nextSymIndex = symPlace;
 
                 turnState = TurnState::PLAYER;
                 break;
