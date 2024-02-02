@@ -52,13 +52,10 @@ void wait(int ms)
     }
 }
 
-bool winCheck(char c)
+bool isWinning(char c)
 {
     for (int i = 0; i < (sizeof(winPatterns) / sizeof(int)); i += 3)
     {
-        // printf("%d %d %d\n", winPatterns[i], winPatterns[i + 1], winPatterns[i + 2]);
-        // printf("|%c|%c|%c|\n", grid[winPatterns[i]], grid[winPatterns[i + 1]], grid[winPatterns[i + 2]]);
-
         if ((grid[winPatterns[i]] == c) 
             && (grid[winPatterns[i + 1]] == c) 
             && (grid[winPatterns[i + 2]] == c)) 
@@ -129,6 +126,7 @@ int main()
         // Gameplay loop
         while (true)
         {
+            static char nextSym = ' ';
             char strEmptyCol[8];
 
             printf("%s\n", CLR_SCR);
@@ -136,21 +134,32 @@ int main()
             {
                 printf("|%c", grid[i - 1]);
 
-                if (grid[i - 1] == ' ') 
-                {
+                if (grid[i - 1] == ' ')
                     strcat(strEmptyCol, std::to_string(i).c_str());
-                }
 
                 if (i % 3 == 0)
                 {
                     printf("|\n");
 
                     for (int j = 0; j < 7; j++) 
-                    {
                         putchar('-');
-                    }
 
                     printf("\n");
+                }
+            }
+
+            if (nextSym != ' ')
+            {
+                if (nextSym == player.sym && isWinning(player.sym))
+                {
+                    printf("\nYou won the game!\nCongrats, %s!", player.name);
+                    return 0;
+                }
+                
+                if (nextSym == cpu.sym && isWinning(cpu.sym))
+                {
+                    printf("\nCPU won the game!\nToo bad, %s.", player.name);
+                    return 0;
                 }
             }
 
@@ -159,49 +168,24 @@ int main()
             case TurnState::PLAYER:
                 printf("Empty column(s): %s\n\n", strEmptyCol);
                 printf("Your turn\n>> ");
-                scanf("%d", &input);
+                scanf("%i", &input);
                 
                 if (input > gridLength || input < 1)
                 {
                     puts("\nInvalid input!\n");
                     wait(3000);
+                    break;
                 }
                 
                 if (grid[input - 1] != ' ') 
                 {
                     puts("\nThat place is not empty!\n");
                     wait(3000);
+                    break;
                 }
 
                 grid[input - 1] = player.sym;
-
-                if (winCheck(player.sym))
-                {
-                    putchar('\n');
-
-                    for (int i = 1; i <= gridLength; i++)
-                    {
-                        printf("|%c", grid[i - 1]);
-
-                        if (i % 3 == 0)
-                        {
-                            printf("|\n");
-
-                            for (int j = 0; j < 7; j++) 
-                            {
-                                putchar('-');
-                            }
-
-                            printf("\n");
-                        }
-                    }
-                    
-                    printf("\nYou won the game!\nCongrats, %s!", player.name);
-                    return 0;
-                }
-
-                // winCheck(player.sym);
-                // scanf("\n");
+                nextSym = player.sym;
 
                 turnState = TurnState::CPU;
                 break;
@@ -218,32 +202,20 @@ int main()
                     printf("\n%d", symPlace);
                 }
                 
+                // static int strategy = -1;
+                // if (strategy < 0) 
+                // {
+                //     int symPlace = rand() % gridLength;
+                //     while (grid[symPlace] != ' ') 
+                //     {
+                //         symPlace = (symPlace + 3) % gridLength;
+
+                //         printf("\n%d", symPlace);
+                //     }
+                // }
+
                 grid[symPlace] = cpu.sym;
-
-                if (winCheck(cpu.sym))
-                {
-                    putchar('\n');
-
-                    for (int i = 1; i <= gridLength; i++)
-                    {
-                        printf("|%c", grid[i - 1]);
-                        
-                        if (i % 3 == 0)
-                        {
-                            printf("|\n");
-
-                            for (int j = 0; j < 7; j++) 
-                            {
-                                putchar('-');
-                            }
-
-                            printf("\n");
-                        }
-                    }
-
-                    printf("\nCPU won the game!\nToo bad, %s.", player.name);
-                    return 0;
-                }
+                nextSym = cpu.sym;
 
                 turnState = TurnState::PLAYER;
                 break;
