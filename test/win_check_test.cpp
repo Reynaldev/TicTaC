@@ -205,7 +205,7 @@ int main()
 #ifdef DIAGONAL_TEST
     for (int i = 1; i <= 2; i++) 
     {
-        printf("\nHorizontal test %d\n", i);
+        printf("\nDiagonal test %d\n", i);
         
         memset(grid, ' ', sizeof(grid));
         grid[(i % 2 == 0) ? 0 : 2] = sym;
@@ -247,7 +247,7 @@ int main()
 
         auto d = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
-        printf("Horizontal test %d time:\n%d microseconds", i + 1, d);
+        printf("\nDiagonal test %d time:\n%d microseconds", i + 1, d);
 
         putchar('\n');
     }
