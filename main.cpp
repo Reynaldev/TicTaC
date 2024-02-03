@@ -146,6 +146,8 @@ int main()
             static char nextSym = ' ';
             static int nextSymIndex = -1;
             char strEmptyCol[8];
+            
+            memset(strEmptyCol, 0, sizeof(strEmptyCol));
 
             printf("%s\n", CLR_SCR);
             for (int i = 1; i <= gridLength; i++)
@@ -240,8 +242,6 @@ int main()
                 turnState = TurnState::PLAYER;
                 break;
             }
-
-            memset(strEmptyCol, 0, sizeof(strEmptyCol));
         }
     }
     else
