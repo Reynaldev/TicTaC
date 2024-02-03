@@ -87,6 +87,7 @@ bool isWinning(char c, int i)
 int main()
 {
     int gridLength = (sizeof(grid) / sizeof(char));
+    int patternLength = (sizeof(winPatterns) / sizeof(int)); 
 
     unsigned int input;
 
@@ -110,6 +111,7 @@ int main()
         // Initialize
         char playerName[] = "";
         int randPick = rand();
+        static bool isCpuGoFirst = false;
 
         TurnState turnState = (randPick % 2 == 0) ? TurnState::PLAYER : TurnState::CPU;
 
@@ -134,6 +136,7 @@ int main()
             printf("\n\nPlayer go first");
             break;
         case TurnState::CPU:
+            isCpuGoFirst = true;
             printf("\n\nCPU go first");
             break;
         }
@@ -183,6 +186,12 @@ int main()
                 }
             }
 
+            if (strlen(strEmptyCol) == 0)
+            {
+                puts("It's a DRAW!\n");
+                return 0;
+            }
+
             switch (turnState)
             {
             case TurnState::PLAYER:
@@ -214,30 +223,65 @@ int main()
                 printf("\n\nCPU's turn");
                 
                 wait(3000);
+                
+                // CPU win algorithm
+                int nextPos = -1;
 
-                int symPlace = rand() % gridLength;
-                while (grid[symPlace] != ' ') 
+                int defPos = -1;
+                int offPos = -1;
+
+                int offScore = 0;
+                bool deffenseMode = false;
+                
+                for (int i = 0; i < patternLength; i += 3)
                 {
-                    symPlace = (symPlace + 1) % gridLength;
+                    int tempScore = 0;
 
-                    printf("\n%d", symPlace);
+                    printf("Row %d\n", i / 3);
+
+                    // Deffense checking
+                    tempScore = (grid[winPatterns[i]] == player.sym) ? tempScore + 1 : tempScore;
+                    tempScore = (grid[winPatterns[i + 1]] == player.sym) ? tempScore + 1 : tempScore;
+                    tempScore = (grid[winPatterns[i + 2]] == player.sym) ? tempScore + 1 : tempScore;
+
+                    if (tempScore == 2)
+                    {
+                        deffenseMode = true;
+                        defPos = i;
+                    }
+
+                    if (deffenseMode)
+                        break;
+
+                    // Offensive checking
+                    tempScore = (grid[winPatterns[i]] == ' ' || grid[winPatterns[i]] == cpu.sym) ? tempScore + 1 : tempScore;
+                    tempScore = (grid[winPatterns[i + 1]] == ' ' || grid[winPatterns[i + 1]] == cpu.sym) ? tempScore + 1 : tempScore;
+                    tempScore = (grid[winPatterns[i + 2]] == ' ' || grid[winPatterns[i + 2]] == cpu.sym) ? tempScore + 1 : tempScore;
+
+                    if (tempScore > offScore)
+                    {
+                        offScore = tempScore;
+                        offPos = i;
+                    }
+                }
+
+                if (deffenseMode)
+                {
+                    while (grid[winPatterns[defPos]] != ' ' && defPos < (defPos + 3)) defPos++;
+
+                    nextPos = winPatterns[defPos];
+                }
+                else
+                {
+                    while (grid[winPatterns[offPos]] != ' ' && offPos < (offPos + 3)) offPos++;
+
+                    nextPos = winPatterns[offPos];
                 }
                 
-                // static int strategy = -1;
-                // if (strategy < 0) 
-                // {
-                //     int symPlace = rand() % gridLength;
-                //     while (grid[symPlace] != ' ') 
-                //     {
-                //         symPlace = (symPlace + 3) % gridLength;
 
-                //         printf("\n%d", symPlace);
-                //     }
-                // }
-
-                grid[symPlace] = cpu.sym;
+                grid[nextPos] = cpu.sym;
                 nextSym = cpu.sym;
-                nextSymIndex = symPlace;
+                nextSymIndex = nextPos;
 
                 turnState = TurnState::PLAYER;
                 break;
