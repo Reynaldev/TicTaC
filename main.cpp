@@ -6,6 +6,9 @@
 
 #define CLR_SCR "\033[2J"
 
+#define GRID_LEN        (sizeof(grid) / sizeof(char))
+#define PATTERN_LEN     (sizeof(winPatterns) / sizeof(int))
+
 char grid[] = {
     ' ', ' ', ' ',
     ' ', ' ', ' ',
@@ -84,11 +87,25 @@ bool isWinning(char c, int i)
     return false;
 }
 
+bool hasEmptyGrid(int &pos)
+{
+    int tPos = pos;
+    while (tPos < (pos + 3)) 
+    {
+        if (grid[winPatterns[tPos]] == ' ')
+        {
+            pos = tPos;
+            return true;
+        }
+
+        tPos = (tPos + 1) % PATTERN_LEN;
+    }
+
+    return false;
+}
+
 int main()
 {
-    int gridLength = (sizeof(grid) / sizeof(char));
-    int patternLength = (sizeof(winPatterns) / sizeof(int)); 
-
     unsigned int input;
 
     puts(CLR_SCR);
@@ -153,7 +170,7 @@ int main()
             memset(strEmptyCol, 0, sizeof(strEmptyCol));
 
             printf("%s\n", CLR_SCR);
-            for (int i = 1; i <= gridLength; i++)
+            for (int i = 1; i <= GRID_LEN; i++)
             {
                 printf("|%c", grid[i - 1]);
 
@@ -199,7 +216,7 @@ int main()
                 printf("Your turn\n>> ");
                 scanf("%i", &input);
                 
-                if (input > gridLength || input < 1)
+                if (input > GRID_LEN || input < 1)
                 {
                     puts("\nInvalid input!\n");
                     wait(3000);
@@ -226,18 +243,28 @@ int main()
                 
                 // CPU win algorithm
                 int nextPos = -1;
-
                 int defPos = -1;
                 int offPos = -1;
 
                 int offScore = 0;
-                bool deffenseMode = false;
+                int defScore = 0;
                 
-                for (int i = 0; i < patternLength; i += 3)
+                for (int i = 0; i < PATTERN_LEN; i += 3)
                 {
                     int tempScore = 0;
 
-                    printf("Row %d\n", i / 3);
+                    // Offensive checking
+                    tempScore = (grid[winPatterns[i]] == cpu.sym) ? tempScore + 1 : tempScore;
+                    tempScore = (grid[winPatterns[i + 1]] == cpu.sym) ? tempScore + 1 : tempScore;
+                    tempScore = (grid[winPatterns[i + 2]] == cpu.sym) ? tempScore + 1 : tempScore;
+
+                    if (tempScore >= 1 && offScore < 2)
+                    {             
+                        offScore = tempScore;  
+                        offPos = i;
+                    }
+
+                    tempScore = 0;
 
                     // Deffense checking
                     tempScore = (grid[winPatterns[i]] == player.sym) ? tempScore + 1 : tempScore;
@@ -246,44 +273,41 @@ int main()
 
                     if (tempScore == 2)
                     {
-                        deffenseMode = true;
+                        defScore = tempScore;
                         defPos = i;
                     }
-
-                    if (deffenseMode)
-                        break;
-
-                    // Offensive checking
-                    tempScore = (grid[winPatterns[i]] == ' ' || grid[winPatterns[i]] == cpu.sym) ? tempScore + 1 : tempScore;
-                    tempScore = (grid[winPatterns[i + 1]] == ' ' || grid[winPatterns[i + 1]] == cpu.sym) ? tempScore + 1 : tempScore;
-                    tempScore = (grid[winPatterns[i + 2]] == ' ' || grid[winPatterns[i + 2]] == cpu.sym) ? tempScore + 1 : tempScore;
-
-                    if (tempScore > offScore)
-                    {
-                        offScore = tempScore;
-                        offPos = i;
-                    }
                 }
 
-                if (deffenseMode)
+                if (offScore >= 2 && hasEmptyGrid(offPos))
                 {
-                    while (grid[winPatterns[defPos]] != ' ' && defPos < (defPos + 3)) defPos++;
+                    nextPos = winPatterns[offPos];
+                    defScore = 0;
+                }
 
+                if (defScore >= 2 && hasEmptyGrid(defPos))
+                {
                     nextPos = winPatterns[defPos];
                 }
-                else
-                {
-                    while (grid[winPatterns[offPos]] != ' ' && offPos < (offPos + 3)) offPos++;
 
-                    nextPos = winPatterns[offPos];
+                if (nextPos == -1)
+                {
+                    nextPos = (offPos + rand()) % PATTERN_LEN;
+
+                    while ((grid[winPatterns[nextPos]] != ' ') || (winPatterns[nextPos] % 2 != 1)) 
+                        nextPos = (nextPos + 1) % PATTERN_LEN;
+
+                    nextPos = winPatterns[nextPos];
                 }
-                
+
+                printf("\nI filled index %d\n", nextPos);
 
                 grid[nextPos] = cpu.sym;
                 nextSym = cpu.sym;
                 nextSymIndex = nextPos;
 
                 turnState = TurnState::PLAYER;
+
+                wait(3000);
                 break;
             }
         }
