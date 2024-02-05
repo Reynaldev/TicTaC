@@ -15,9 +15,9 @@
 #define PATTERN_LEN     (sizeof(winPatterns) / sizeof(int))
 
 char grid[] = {
-    'X', ' ', ' ',
-    'O', 'O', ' ',
-    'X', ' ', ' '
+    ' ', ' ', ' ',
+    ' ', 'O', ' ',
+    ' ', ' ', ' '
 };
 
 int winPatterns[] = {
@@ -167,15 +167,33 @@ int main(int argc, char **argv)
 
             printf("Row %d, index: %d\n", i / 3, i);
 
+            // Empty col checking
+            tempScore = (grid[winPatterns[i]] == ' ') ? tempScore + 1 : tempScore;
+            tempScore = (grid[winPatterns[i + 1]] == ' ') ? tempScore + 1 : tempScore;
+            tempScore = (grid[winPatterns[i + 2]] == ' ') ? tempScore + 1 : tempScore;
+
+            if (tempScore <= 0)
+            {
+                printf("No empty col at pattern row %d", i / 3);
+                continue;
+            }
+
+            tempScore = 0;
+
             // Offensive checking
             tempScore = (grid[winPatterns[i]] == symbol) ? tempScore + 1 : tempScore;
             tempScore = (grid[winPatterns[i + 1]] == symbol) ? tempScore + 1 : tempScore;
             tempScore = (grid[winPatterns[i + 2]] == symbol) ? tempScore + 1 : tempScore;
 
             if (tempScore >= 1 && offScore < 2)
-            {             
+            {          
                 offScore = tempScore;  
                 offPos = i;
+            }
+
+            if (tempScore >= 2)
+            {
+                printf("Win at pattern row %d\n", i / 3);
             }
 
             tempScore = 0;
@@ -187,6 +205,7 @@ int main(int argc, char **argv)
 
             if (tempScore == 2)
             {
+                printf("Danger at pattern row %d\n", i / 3);
                 defScore = tempScore;
                 defPos = i;
             }
@@ -217,8 +236,20 @@ int main(int argc, char **argv)
 
         if (nextPos == -1)
         {
-            nextPos = (offPos + rand()) % PATTERN_LEN;
-            while (grid[winPatterns[nextPos]] != ' ') nextPos = (nextPos + 1) % PATTERN_LEN;
+            nextPos = 0;
+            // while (grid[winPatterns[nextPos]] != ' ') nextPos = (nextPos + 1) % PATTERN_LEN;
+            while (nextPos < GRID_LEN) 
+            {
+                if (grid[nextPos] == ' ')
+                    printf("Empty col at index %d\n", nextPos);
+
+                if (nextPos % 2 == 0)
+                    printf("Even col at %d\n\n", nextPos);
+
+                nextPos++;
+            }
+
+            putchar('\n');
 
             nextPos = winPatterns[nextPos];
         }

@@ -253,6 +253,16 @@ int main()
                 {
                     int tempScore = 0;
 
+                    // Empty col checking
+                    tempScore = (grid[winPatterns[i]] == ' ') ? tempScore + 1 : tempScore;
+                    tempScore = (grid[winPatterns[i + 1]] == ' ') ? tempScore + 1 : tempScore;
+                    tempScore = (grid[winPatterns[i + 2]] == ' ') ? tempScore + 1 : tempScore;
+
+                    if (tempScore <= 0)
+                        continue;
+
+                    tempScore = 0;
+
                     // Offensive checking
                     tempScore = (grid[winPatterns[i]] == cpu.sym) ? tempScore + 1 : tempScore;
                     tempScore = (grid[winPatterns[i + 1]] == cpu.sym) ? tempScore + 1 : tempScore;
@@ -291,23 +301,25 @@ int main()
 
                 if (nextPos == -1)
                 {
-                    nextPos = (offPos + rand()) % PATTERN_LEN;
+                    nextPos = 4;
+                    int max = nextPos + GRID_LEN;
 
-                    while ((grid[winPatterns[nextPos]] != ' ') || (winPatterns[nextPos] % 2 != 1)) 
-                        nextPos = (nextPos + 1) % PATTERN_LEN;
+                    while (nextPos < max) 
+                    {
+                        if (grid[nextPos % GRID_LEN] == ' ' && (nextPos % GRID_LEN) % 2 == 0)
+                            break;
+
+                        nextPos++;
+                    }
 
                     nextPos = winPatterns[nextPos];
                 }
-
-                printf("\nI filled index %d\n", nextPos);
 
                 grid[nextPos] = cpu.sym;
                 nextSym = cpu.sym;
                 nextSymIndex = nextPos;
 
                 turnState = TurnState::PLAYER;
-
-                wait(3000);
                 break;
             }
         }
