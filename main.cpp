@@ -301,18 +301,22 @@ int main()
 
                 if (nextPos == -1)
                 {
-                    nextPos = 4;
-                    int max = nextPos + GRID_LEN;
+                    int pos = 4;
+                    int max = pos + GRID_LEN;
 
-                    while (nextPos < max) 
+                    while (pos < max) 
                     {
-                        if (grid[nextPos % GRID_LEN] == ' ' && (nextPos % GRID_LEN) % 2 == 0)
+                        if (grid[pos % GRID_LEN] == ' ' && (pos % GRID_LEN) % 2 == 0)
+                        {
+                            nextPos = pos % GRID_LEN;
                             break;
+                        }
 
-                        nextPos++;
+                        if (grid[pos % GRID_LEN] == ' ')
+                            nextPos = pos % GRID_LEN;
+
+                        pos++;
                     }
-
-                    nextPos = winPatterns[nextPos];
                 }
 
                 grid[nextPos] = cpu.sym;
