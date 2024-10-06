@@ -1,3 +1,15 @@
+/*
+ * @file
+ * @brief A simple Tic-Tac-Toe game
+ * where you play with AI. Make your own strategy and try to beat it!
+ * @details
+ * This is a basic game with Command-Line interface. The game includes win and lose, 
+ * and randomly chosen symbol (You can either be O or X).
+ * You have to input between 1-9 on empty column, and play again if you lose.
+ *
+ * @author [Reynaldev](https://github.com/Reynaldev)
+ */
+
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -9,12 +21,15 @@
 #define GRID_LEN        (sizeof(grid) / sizeof(char))
 #define PATTERN_LEN     (sizeof(winPatterns) / sizeof(int))
 
+// Define an empty 3x3 grid
 char grid[] = {
     ' ', ' ', ' ',
     ' ', ' ', ' ',
     ' ', ' ', ' '
 };
 
+// A pattern for the AI to win the game.
+// The AI will use this to check every column of the opponent.
 int winPatterns[] = {
     // Horizontal
     0, 1, 2,
@@ -31,6 +46,7 @@ int winPatterns[] = {
     2, 4, 6
 };
 
+// A struct/class to define player and AI.
 struct {
     char name[64];
     char sym;
@@ -87,6 +103,9 @@ bool isWinning(char c, int i)
     return false;
 }
 
+/*
+ * @brief Check a row if it has empty column to put the next symbol
+ */
 bool hasEmptyGrid(int &pos)
 {
     int tPos = pos;
@@ -109,7 +128,7 @@ int main()
     unsigned int input;
 
     puts(CLR_SCR);
-    printf("Welcome to TicTac++\n");
+    printf("Welcome to Tic-Tac-Toe Game\n");
     printf("1) Play\n");
     printf("0) Exit\n");
     printf(">> ");
@@ -163,12 +182,14 @@ int main()
         // Gameplay loop
         while (true)
         {
-            static char nextSym = ' ';
-            static int nextSymIndex = -1;
-            char strEmptyCol[8];
+            static char nextSym = ' ';          // Stores current symbol
+            static int nextSymIndex = -1;       // Stores current index
+            char strEmptyCol[8];                // Stores an array of empty column
             
+            // Set strEmptyCol to empty, this will avoid glitch from previous render
             memset(strEmptyCol, 0, sizeof(strEmptyCol));
 
+            // Draw 3x3 grid
             printf("%s\n", CLR_SCR);
             for (int i = 1; i <= GRID_LEN; i++)
             {
@@ -188,27 +209,31 @@ int main()
                 }
             }
 
+            // Check if current symbol is not empty and...
+            // ...index has postive value not bigger than the column
             if (nextSym != ' ' && nextSymIndex != -1)
             {
                 if (nextSym == player.sym && isWinning(player.sym, nextSymIndex))
                 {
                     printf("\nYou won the game!\nCongrats, %s!", player.name);
-                    return 0;
+                    exit(0);
                 }
                 
                 if (nextSym == cpu.sym && isWinning(cpu.sym, nextSymIndex))
                 {
                     printf("\nCPU won the game!\nToo bad, %s.", player.name);
-                    return 0;
+                    exit(0);
                 }
             }
 
+            // If there's no empty columns left
             if (strlen(strEmptyCol) == 0)
             {
                 puts("It's a DRAW!\n");
-                return 0;
+                exit(0);
             }
 
+            // Start putting a symbol
             switch (turnState)
             {
             case TurnState::PLAYER:
@@ -242,6 +267,8 @@ int main()
                 wait(3000);
                 
                 // CPU win algorithm
+                
+                // Start defining some variables to calculate position of each symbol
                 int nextPos = -1;
                 int defPos = -1;
                 int offPos = -1;
@@ -249,6 +276,10 @@ int main()
                 int offScore = 0;
                 int defScore = 0;
                 
+                /*
+                 * The AI will start a loop based on matching pattern,
+                 * where every matched column will add a score to tempScore variable.
+                 */
                 for (int i = 0; i < PATTERN_LEN; i += 3)
                 {
                     int tempScore = 0;
@@ -288,6 +319,9 @@ int main()
                     }
                 }
 
+                // If either offScore or defScore is bigger than 2 (The threshold value),
+                // then use a pattern based on offPos and defPos.
+                
                 if (offScore >= 2 && hasEmptyGrid(offPos))
                 {
                     nextPos = winPatterns[offPos];
@@ -299,6 +333,9 @@ int main()
                     nextPos = winPatterns[defPos];
                 }
 
+                // If the score is not sufficient to meet the offScore or defScore,
+                // then fill a random column with this priority: 
+                // center, diagonal, and then vertical or horizontal
                 if (nextPos == -1)
                 {
                     int pos = 4;
